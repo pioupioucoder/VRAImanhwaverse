@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManhwaVerse — Lecteur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #1a1a24;
+  --surface: #1e1e2e;
+  --surface2: #252535;
+  --border: #2a2a3e;
+  --accent: #c084fc;
+  --accent2: #818cf8;
+  --accent3: #f472b6;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --card-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --glow: 0 0 20px rgba(192,132,252,0.15);
+  --radius: 16px;
+  --radius-sm: 8px;
+  --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+  --bg: #f0f0f8;
+  --bg2: #e8e8f5;
+  --bg3: #ddddf0;
+  --surface: #ffffff;
+  --surface2: #f5f5ff;
+  --border: #d0d0e8;
+  --text: #1a1a2e;
+  --text2: #4a4a6e;
+  --text3: #8888aa;
+  --card-shadow: 0 8px 32px rgba(100,80,200,0.1);
+  --glow: 0 0 20px rgba(192,132,252,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Raleway',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  transition:background 0.4s,color 0.4s;
+}
+
+/* ═══════════════ SCROLLBAR ═══════════════ */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+/* ═══════════════ PASSWORD SCREEN ═══════════════ */
+#passwordScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:radial-gradient(ellipse at 30% 70%, #1a0a2e 0%, #0a0a0f 60%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2rem;
+}
+.pw-logo{
+  font-family:'Cinzel',serif;
+  font-size:clamp(2rem,5vw,3.5rem);
+  font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:4px;
+  text-align:center;
+}
+.pw-sub{color:var(--text2);font-size:0.9rem;letter-spacing:2px;text-align:center}
+.pw-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:2.5rem 3rem;
+  display:flex;flex-direction:column;gap:1.2rem;
+  width:min(400px,90vw);
+  box-shadow:var(--card-shadow);
+}
+.pw-box label{font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;color:var(--text2)}
+.pw-box input{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:0.85rem 1rem;
+  color:var(--text);
+  font-family:'Raleway',sans-serif;
+  font-size:1rem;
+  outline:none;
+  transition:var(--transition);
+}
+.pw-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,132,252,0.1)}
+.pw-error{color:#f87171;font-size:0.85rem;text-align:center;min-height:1.2em}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;border:none;
+  border-radius:var(--radius-sm);
+  padding:0.9rem;
+  font-family:'Raleway',sans-serif;
+  font-weight:700;font-size:0.95rem;
+  cursor:pointer;letter-spacing:1px;
+  transition:var(--transition);
+}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}
+.pw-stars{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.star{
+  position:absolute;background:#fff;border-radius:50%;
+  animation:twinkle var(--dur,3s) ease-in-out infinite;
+  opacity:0;
+}
+@keyframes twinkle{0%,100%{opacity:0}50%{opacity:var(--op,0.6)}}
+
+/* ═══════════════ HEADER ═══════════════ */
+#app{display:none}
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,15,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  height:64px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;
+}
+[data-theme="light"] header{background:rgba(240,240,248,0.85)}
+.logo{
+  font-family:'Cinzel',serif;
+  font-size:1.4rem;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  cursor:pointer;letter-spacing:2px;white-space:nowrap;
+}
+.header-center{
+  flex:1;max-width:480px;position:relative;
+}
+.search-input{
+  width:100%;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:50px;
+  padding:0.6rem 1rem 0.6rem 2.8rem;
+  color:var(--text);
+  font-family:'Raleway',sans-serif;
+  font-size:0.9rem;outline:none;
+  transition:var(--transition);
+}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(192,132,252,0.1)}
+.search-icon{position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);color:var(--text3);font-size:0.9rem}
+.header-actions{display:flex;align-items:center;gap:0.5rem}
+.icon-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:50%;
+  width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--text2);
+  transition:var(--transition);font-size:1rem;
+}
+.icon-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ═══════════════ HOME PAGE ═══════════════ */
+#homePage{padding:2rem}
+.section-title{
+  font-family:'Cinzel',serif;
+  font-size:1.1rem;letter-spacing:3px;
+  color:var(--text2);text-transform:uppercase;
+  margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:0.75rem;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.manhwa-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:1.5rem;
+}
+.manhwa-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  cursor:pointer;
+  transition:var(--transition);
+  position:relative;
+  box-shadow:var(--card-shadow);
+}
+.manhwa-card:hover{
+  transform:translateY(-6px);
+  border-color:var(--accent);
+  box-shadow:0 16px 48px rgba(0,0,0,0.4),var(--glow);
+}
+.card-cover{
+  width:100%;aspect-ratio:2/3;
+  object-fit:cover;
+  display:block;
+  background:var(--bg3);
+}
+.card-cover-placeholder{
+  width:100%;aspect-ratio:2/3;
+  background:linear-gradient(135deg,var(--bg3),var(--surface2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.5rem;color:var(--text3);
+}
+.card-info{padding:0.85rem}
+.card-title{
+  font-weight:700;font-size:0.9rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-bottom:0.3rem;
+}
+.card-meta{font-size:0.75rem;color:var(--text3)}
+.status-badge{
+  display:inline-block;
+  font-size:0.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:0.2em 0.6em;border-radius:50px;
+  background:var(--accent);color:#fff;margin-top:0.4rem;
+}
+.status-badge.pause{background:#f59e0b}
+.status-badge.termine{background:#10b981}
+.drag-handle{
+  position:absolute;top:8px;right:8px;
+  background:rgba(0,0,0,0.6);
+  border-radius:6px;padding:4px 6px;
+  color:#fff;font-size:0.75rem;
+  opacity:0;transition:opacity 0.2s;cursor:grab;
+}
+.manhwa-card:hover .drag-handle{opacity:1}
+.manhwa-card.dragging{opacity:0.4;transform:scale(0.95)}
+.manhwa-card.drag-over{border-color:var(--accent3);box-shadow:0 0 0 2px var(--accent3)}
+
+/* ═══════════════ DETAIL PAGE ═══════════════ */
+#detailPage{display:none;padding:0}
+.detail-hero{
+  position:relative;height:420px;overflow:hidden;
+}
+.detail-hero-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center top;
+  filter:blur(20px) brightness(0.3);transform:scale(1.1);
+}
+.detail-hero-content{
+  position:relative;z-index:1;
+  height:100%;
+  display:flex;align-items:flex-end;
+  padding:2.5rem;
+  gap:2rem;
+}
+.detail-cover{
+  width:160px;flex-shrink:0;
+  aspect-ratio:2/3;object-fit:cover;
+  border-radius:var(--radius);
+  box-shadow:0 16px 48px rgba(0,0,0,0.6);
+  border:2px solid rgba(255,255,255,0.1);
+}
+.detail-cover-placeholder{
+  width:160px;flex-shrink:0;aspect-ratio:2/3;
+  background:var(--surface2);border-radius:var(--radius);
+  display:flex;align-items:center;justify-content:center;
+  font-size:3rem;border:2px solid var(--border);
+}
+.detail-meta h1{
+  font-family:'Cinzel',serif;
+  font-size:clamp(1.5rem,4vw,2.5rem);
+  font-weight:900;margin-bottom:0.5rem;
+  text-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+.detail-meta .synopsis{
+  color:var(--text2);font-size:0.9rem;line-height:1.7;
+  max-width:600px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.detail-meta .badges{display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem}
+.badge{
+  font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:0.3em 0.8em;border-radius:50px;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+}
+.detail-body{padding:2rem}
+.back-btn{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  color:var(--text2);font-size:0.9rem;
+  cursor:pointer;margin-bottom:1.5rem;
+  transition:color 0.2s;
+}
+.back-btn:hover{color:var(--accent)}
+.chapters-list{display:flex;flex-direction:column;gap:0.5rem}
+.chapter-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:1rem 1.25rem;
+  display:flex;align-items:center;gap:1rem;
+  cursor:pointer;transition:var(--transition);
+}
+.chapter-item:hover{
+  border-color:var(--accent);
+  background:var(--surface2);
+  transform:translateX(4px);
+}
+.chapter-num{
+  font-family:'Cinzel',serif;
+  font-weight:700;color:var(--accent);
+  min-width:80px;font-size:0.95rem;
+}
+.chapter-title{font-weight:500;flex:1}
+.chapter-arrow{color:var(--text3);font-size:0.8rem}
+
+/* ═══════════════ READER PAGE ═══════════════ */
+#readerPage{display:none}
+.reader-header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,10,15,0.95);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:0.75rem 1.5rem;
+  display:flex;align-items:center;gap:1rem;
+  flex-wrap:wrap;
+}
+[data-theme="light"] .reader-header{background:rgba(240,240,248,0.95)}
+.reader-title{
+  font-family:'Cinzel',serif;
+  font-size:0.85rem;font-weight:700;
+  color:var(--accent);letter-spacing:1px;
+  flex:1;min-width:120px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.chapter-select{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:0.5rem 0.75rem;
+  color:var(--text);
+  font-family:'Raleway',sans-serif;
+  font-size:0.85rem;outline:none;cursor:pointer;
+  transition:var(--transition);
+}
+.chapter-select:focus{border-color:var(--accent)}
+.nav-btns{display:flex;gap:0.5rem}
+.nav-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:0.5rem 1rem;
+  color:var(--text2);
+  font-family:'Raleway',sans-serif;
+  font-size:0.8rem;cursor:pointer;
+  transition:var(--transition);
+  white-space:nowrap;
+}
+.nav-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+.nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+.zoom-btn{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:0.5rem 0.75rem;
+  color:var(--text2);cursor:pointer;font-size:0.85rem;
+  transition:var(--transition);
+}
+.zoom-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.reader-content{
+  max-width:800px;margin:0 auto;
+  padding:1rem 0.5rem 4rem;
+  position:relative;
+}
+.reader-content.zoom-enabled{
+  max-width:none;
+  cursor:zoom-in;
+}
+.reader-page{
+  display:block;width:100%;
+  margin-bottom:2px;
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.page-loading{
+  width:100%;aspect-ratio:3/4;
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);font-size:0.85rem;
+}
+.reader-loading{
+  display:flex;align-items:center;justify-content:center;
+  height:40vh;flex-direction:column;gap:1rem;color:var(--text2);
+}
+.spinner{
+  width:40px;height:40px;
+  border:3px solid var(--border);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════ SETTINGS MODAL ═══════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:2rem;
+  width:min(480px,90vw);
+  box-shadow:var(--card-shadow);
+}
+.modal h2{
+  font-family:'Cinzel',serif;font-size:1.1rem;
+  font-weight:700;margin-bottom:1.5rem;
+  color:var(--accent);letter-spacing:2px;
+}
+.form-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem}
+.form-group label{font-size:0.8rem;letter-spacing:1px;color:var(--text2);text-transform:uppercase}
+.form-group input{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:0.7rem;
+  color:var(--text);font-family:'Raleway',sans-serif;font-size:0.9rem;outline:none;
+  transition:var(--transition);
+}
+.form-group input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem}
+.btn-secondary{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:0.7rem 1.2rem;
+  color:var(--text2);font-family:'Raleway',sans-serif;
+  font-size:0.85rem;cursor:pointer;transition:var(--transition);
+}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.modal .btn-primary{padding:0.7rem 1.2rem}
+
+/* ═══════════════ EMPTY / LOADER ═══════════════ */
+.empty-state{
+  text-align:center;padding:4rem 2rem;color:var(--text3);
+}
+.empty-state .icon{font-size:3rem;margin-bottom:1rem;opacity:0.4}
+.empty-state p{font-size:0.9rem;line-height:1.6}
+
+/* ═══════════════ TOAST ═══════════════ */
+#toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:300;
+  background:var(--surface);border:1px solid var(--accent);
+  border-radius:var(--radius-sm);padding:0.8rem 1.2rem;
+  font-size:0.85rem;color:var(--text);
+  box-shadow:var(--card-shadow);
+  transform:translateY(100px);opacity:0;
+  transition:all 0.3s ease;
+}
+#toast.show{transform:translateY(0);opacity:1}
+
+/* ═══════════════ PROGRESS BAR ═══════════════ */
+.progress-bar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+  transform-origin:left;transform:scaleX(0);
+  transition:transform 0.1s;
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(max-width:600px){
+  .header-center{display:none}
+  .detail-hero-content{padding:1.5rem;gap:1rem}
+  .detail-cover{width:110px}
+  .reader-header{gap:0.5rem}
+  .reader-title{font-size:0.75rem}
+  .manhwa-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
+
+/* ═══════════════ AMBIENT BG ═══════════════ */
+.ambient{
+  position:fixed;pointer-events:none;z-index:0;
+  border-radius:50%;filter:blur(120px);opacity:0.04;
+  animation:float 8s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+.ambient-1{width:600px;height:600px;background:var(--accent);top:-200px;right:-200px;animation-delay:-2s}
+.ambient-2{width:400px;height:400px;background:var(--accent2);bottom:-150px;left:-100px;animation-delay:-5s}
+</style>
+</head>
+<body>
+
+<!-- AMBIENT -->
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- PASSWORD SCREEN -->
+<div id="passwordScreen">
+  <div class="pw-stars" id="pwStars"></div>
+  <div class="pw-logo" style="position:relative;z-index:1">ManhwaVerse</div>
+  <div class="pw-sub" style="position:relative;z-index:1">Votre bibliothèque privée</div>
+  <div class="pw-box" style="position:relative;z-index:1">
+    <label>Mot de passe</label>
+    <input type="password" id="pwInput" placeholder="••••••••" autocomplete="current-password">
+    <div class="pw-error" id="pwError"></div>
+    <button class="btn-primary" onclick="checkPassword()">Entrer</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <div class="logo" onclick="showHome()">ManhwaVerse</div>
+    <div class="header-center">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un manhwa...">
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleTheme()" title="Thème">🌙</button>
+      <button class="icon-btn" onclick="openSettings()" title="Paramètres">⚙️</button>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <div id="homePage">
+    <div class="section-title">Bibliothèque</div>
+    <div class="manhwa-grid" id="manhwaGrid"></div>
+    <div id="emptyState" style="display:none" class="empty-state">
+      <div class="icon">📚</div>
+      <p>Aucun manhwa trouvé.<br>Ajoutez des dossiers dans <code>/manhwa/</code><br>et configurez <code>data.json</code></p>
+    </div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="detailPage">
+    <div class="detail-hero">
+      <div class="detail-hero-bg" id="detailBg"></div>
+      <div class="detail-hero-content">
+        <img id="detailCover" class="detail-cover" style="display:none">
+        <div id="detailCoverPlaceholder" class="detail-cover-placeholder">📖</div>
+        <div class="detail-meta">
+          <h1 id="detailTitle">—</h1>
+          <p class="synopsis" id="detailSynopsis"></p>
+          <div class="badges" id="detailBadges"></div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-body">
+      <div class="back-btn" onclick="showHome()">← Retour</div>
+      <div class="section-title" id="chapterCountLabel">Chapitres</div>
+      <div class="chapters-list" id="chaptersList"></div>
+      <div class="reader-loading" id="chaptersLoading" style="display:none">
+        <div class="spinner"></div>
+        <span>Détection des chapitres…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- READER -->
+  <div id="readerPage">
+    <div class="reader-header">
+      <div class="reader-title" id="readerTitle">—</div>
+      <select class="chapter-select" id="chapterSelect" onchange="changeChapterFromSelect()"></select>
+      <div class="nav-btns">
+        <button class="nav-btn" id="prevChapterBtn" onclick="navigateChapter(-1)">← Préc.</button>
+        <button class="nav-btn" id="nextChapterBtn" onclick="navigateChapter(1)">Suiv. →</button>
+      </div>
+      <button class="zoom-btn" id="zoomBtn" onclick="toggleZoom()">🔍 Zoom</button>
+      <button class="nav-btn" onclick="showDetail(currentManhwa)">✕ Fermer</button>
+    </div>
+    <div id="readerContent" class="reader-content"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>Paramètres</h2>
+    <div class="form-group">
+      <label>Mot de passe actuel</label>
+      <input type="password" id="currentPw" placeholder="Mot de passe actuel">
+    </div>
+    <div class="form-group">
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="newPw" placeholder="Nouveau mot de passe">
+    </div>
+    <div class="form-group">
+      <label>Confirmer</label>
+      <input type="password" id="confirmPw" placeholder="Confirmer le mot de passe">
+    </div>
+    <div class="pw-error" id="settingsError"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSettings()">Annuler</button>
+      <button class="btn-primary" style="padding:0.7rem 1.2rem" onclick="saveSettings()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════ STATE ═══════════════
+const DEFAULT_PASSWORD = '1234';
+const SESSION_KEY = 'mv_session';
+const PREFS_KEY = 'mv_prefs';
+const ORDER_KEY = 'mv_order';
+
+let allManhwas = [];
+let currentManhwa = null;
+let currentChapterIndex = 0;
+let currentChapters = [];
+let zoomEnabled = false;
+
+// ═══════════════ STARS ═══════════════
+function createStars() {
+  const container = document.getElementById('pwStars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 1;
+    s.style.cssText = `
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      width:${size}px;height:${size}px;
+      --dur:${Math.random()*3+2}s;
+      --op:${Math.random()*0.5+0.2};
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(s);
+  }
+}
+createStars();
+
+// ═══════════════ PREFS ═══════════════
+function getPrefs() {
+  try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch { return {}; }
+}
+function savePrefs(p) { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); }
+
+// ═══════════════ SESSION ═══════════════
+function isAuthenticated() {
+  const s = sessionStorage.getItem(SESSION_KEY);
+  return s === 'true';
+}
+function setAuthenticated() {
+  sessionStorage.setItem(SESSION_KEY, 'true');
+}
+
+// ═══════════════ PASSWORD ═══════════════
+function checkPassword() {
+  const val = document.getElementById('pwInput').value;
+  const prefs = getPrefs();
+  const pw = prefs.password || DEFAULT_PASSWORD;
+  if (val === pw) {
+    setAuthenticated();
+    document.getElementById('passwordScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    const err = document.getElementById('pwError');
+    err.textContent = 'Mot de passe incorrect.';
+    setTimeout(() => err.textContent = '', 2000);
+    document.getElementById('pwInput').value = '';
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+});
+
+// ═══════════════ BOOT ═══════════════
+(function boot() {
+  // Apply saved theme
+  const prefs = getPrefs();
+  if (prefs.theme) document.documentElement.setAttribute('data-theme', prefs.theme);
+  
+  if (isAuthenticated()) {
+    document.getElementById('passwordScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  }
+})();
+
+// ═══════════════ THEME ═══════════════
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  const prefs = getPrefs();
+  prefs.theme = next;
+  savePrefs(prefs);
+  document.querySelector('.icon-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+
+// ═══════════════ TOAST ═══════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════ SETTINGS ═══════════════
+function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('currentPw').value = '';
+  document.getElementById('newPw').value = '';
+  document.getElementById('confirmPw').value = '';
+  document.getElementById('settingsError').textContent = '';
+}
+function saveSettings() {
+  const prefs = getPrefs();
+  const cur = document.getElementById('currentPw').value;
+  const nw = document.getElementById('newPw').value;
+  const cf = document.getElementById('confirmPw').value;
+  const pw = prefs.password || DEFAULT_PASSWORD;
+  const err = document.getElementById('settingsError');
+  if (cur !== pw) { err.textContent = 'Mot de passe actuel incorrect.'; return; }
+  if (!nw) { err.textContent = 'Le nouveau mot de passe ne peut pas être vide.'; return; }
+  if (nw !== cf) { err.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+  prefs.password = nw;
+  savePrefs(prefs);
+  closeSettings();
+  showToast('Mot de passe mis à jour ✓');
+}
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsModal')) closeSettings();
+});
+
+// ═══════════════ DATA LOADING ═══════════════
+async function loadDataJson() {
+  try {
+    const r = await fetch('./data.json');
+    if (r.ok) return await r.json();
+  } catch {}
+  return { manhwas: [] };
+}
+
+async function fileExists(url) {
+  try {
+    const r = await fetch(url, { method: 'HEAD' });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function findCover(name) {
+  const bases = [`./backgrounds/${name}`, `./manhwa/${name}/cover`];
+  const exts = ['.jpg', '.jpeg', '.png', '.webp'];
+  for (const base of bases) {
+    for (const ext of exts) {
+      if (await fileExists(base + ext)) return base + ext;
+    }
+  }
+  return null;
+}
+
+async function discoverChapters(manhwaName) {
+  const chapters = [];
+  // Try chapters 1–300, stop after 15 consecutive misses
+  let misses = 0;
+  for (let i = 1; i <= 300; i++) {
+    const url = `./manhwa/${manhwaName}/${i}/`;
+    const img = await findFirstImage(manhwaName, i);
+    if (img) {
+      chapters.push(i);
+      misses = 0;
+    } else {
+      misses++;
+      if (misses >= 15 && chapters.length > 0) break;
+    }
+  }
+  return chapters;
+}
+
+async function findFirstImage(manhwaName, chapter) {
+  const exts = ['.webp', '.jpg', '.jpeg', '.png'];
+  // Try images 001–010 first, then 1–010
+  const pads = [];
+  for (let n = 1; n <= 30; n++) {
+    const s = String(n);
+    pads.push(s.padStart(3, '0'));
+    pads.push(s.padStart(2, '0'));
+    if (n <= 9) pads.push(s);
+  }
+  const uniquePads = [...new Set(pads)];
+  for (const pad of uniquePads) {
+    for (const ext of exts) {
+      const url = `./manhwa/${manhwaName}/${chapter}/${pad}${ext}`;
+      if (await fileExists(url)) return url;
+    }
+  }
+  return null;
+}
+
+async function discoverImages(manhwaName, chapter) {
+  const exts = ['.webp', '.jpg', '.jpeg', '.png'];
+  const found = [];
+  let misses = 0;
+  // Build candidate filenames
+  const nums = [];
+  for (let n = 0; n <= 500; n++) {
+    nums.push(n);
+  }
+  for (const n of nums) {
+    const names = [
+      String(n).padStart(3, '0'),
+      String(n).padStart(2, '0'),
+      String(n)
+    ];
+    const uniqueNames = [...new Set(names)];
+    let hit = false;
+    for (const name of uniqueNames) {
+      if (hit) break;
+      for (const ext of exts) {
+        const url = `./manhwa/${manhwaName}/${chapter}/${name}${ext}`;
+        const exists = await fileExists(url);
+        if (exists) {
+          found.push({ num: n, url });
+          hit = true;
+          misses = 0;
+          break;
+        }
+      }
+    }
+    if (!hit) {
+      misses++;
+      if (misses >= 20 && found.length > 0) break;
+    }
+  }
+  // Sort by number
+  found.sort((a, b) => a.num - b.num);
+  return found.map(f => f.url);
+}
+
+// ═══════════════ INIT ═══════════════
+async function init() {
+  const data = await loadDataJson();
+  const configuredManhwas = (data.manhwas || []);
+
+  // If no data.json manhwas, try to auto-detect from common names
+  // For configured ones, use them; for all, build cards
+  const prefs = getPrefs();
+  const savedOrder = (() => {
+    try { return JSON.parse(localStorage.getItem(ORDER_KEY)) || []; } catch { return []; }
+  })();
+
+  allManhwas = configuredManhwas.map(m => ({
+    name: m.name || m.title,
+    title: m.title || m.name,
+    synopsis: m.synopsis || '',
+    status: m.status || 'en cours',
+    seasons: m.seasons || null,
+    cover: m.cover || null,
+    chapters: m.chapters || {},
+  }));
+
+  // If no manhwas configured, show hint
+  if (allManhwas.length === 0) {
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+
+  // Apply saved order
+  if (savedOrder.length > 0) {
+    const ordered = [];
+    for (const name of savedOrder) {
+      const m = allManhwas.find(x => x.name === name);
+      if (m) ordered.push(m);
+    }
+    // Add any new ones not in saved order
+    for (const m of allManhwas) {
+      if (!ordered.find(x => x.name === m.name)) ordered.push(m);
+    }
+    allManhwas = ordered;
+  }
+
+  renderGrid(allManhwas);
+  setupSearch();
+}
+
+// ═══════════════ GRID ═══════════════
+async function renderGrid(manhwas) {
+  const grid = document.getElementById('manhwaGrid');
+  grid.innerHTML = '';
+
+  if (manhwas.length === 0) {
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('emptyState').style.display = 'none';
+
+  for (const m of manhwas) {
+    const card = document.createElement('div');
+    card.className = 'manhwa-card';
+    card.dataset.name = m.name;
+    card.draggable = true;
+
+    let coverHtml = `<div class="card-cover-placeholder">📖</div>`;
+
+    const statusClass = m.status === 'terminé' ? 'termine' : (m.status === 'pause' ? 'pause' : '');
+    const statusLabel = m.status || 'en cours';
+
+    card.innerHTML = `
+      ${coverHtml}
+      <div class="card-info">
+        <div class="card-title">${m.title}</div>
+        <div class="card-meta">${m.seasons ? `${m.seasons} saison${m.seasons>1?'s':''}` : ''}</div>
+        <span class="status-badge ${statusClass}">${statusLabel}</span>
+      </div>
+      <div class="drag-handle" title="Déplacer">⠿</div>
+    `;
+
+    card.querySelector('.card-info').addEventListener('click', () => showDetail(m.name));
+    card.querySelector('.card-cover-placeholder') && card.querySelector('.card-cover-placeholder').addEventListener('click', () => showDetail(m.name));
+
+    // Load cover async
+    loadCardCover(card, m);
+
+    // Drag & drop
+    setupDrag(card);
+
+    grid.appendChild(card);
+  }
+}
+
+async function loadCardCover(card, m) {
+  let coverUrl = m.cover || null;
+  if (!coverUrl) {
+    coverUrl = await findCover(m.name);
+  }
+  if (coverUrl) {
+    const placeholder = card.querySelector('.card-cover-placeholder');
+    const img = document.createElement('img');
+    img.className = 'card-cover';
+    img.src = coverUrl;
+    img.alt = m.title;
+    img.onerror = () => {}; // keep placeholder
+    img.onload = () => {
+      if (placeholder) placeholder.replaceWith(img);
+    };
+  }
+}
+
+// ═══════════════ SEARCH ═══════════════
+function setupSearch() {
+  document.getElementById('searchInput').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    const filtered = q ? allManhwas.filter(m =>
+      m.title.toLowerCase().includes(q) ||
+      (m.synopsis && m.synopsis.toLowerCase().includes(q))
+    ) : allManhwas;
+    renderGrid(filtered);
+  });
+}
+
+// ═══════════════ DRAG & DROP ═══════════════
+let dragSrc = null;
+function setupDrag(card) {
+  card.addEventListener('dragstart', e => {
+    dragSrc = card;
+    card.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  card.addEventListener('dragend', () => {
+    card.classList.remove('dragging');
+    document.querySelectorAll('.manhwa-card').forEach(c => c.classList.remove('drag-over'));
+    saveOrder();
+  });
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (card !== dragSrc) {
+      document.querySelectorAll('.manhwa-card').forEach(c => c.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    }
+  });
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    if (dragSrc && dragSrc !== card) {
+      const grid = document.getElementById('manhwaGrid');
+      const cards = [...grid.querySelectorAll('.manhwa-card')];
+      const srcIdx = cards.indexOf(dragSrc);
+      const dstIdx = cards.indexOf(card);
+      if (srcIdx < dstIdx) grid.insertBefore(dragSrc, card.nextSibling);
+      else grid.insertBefore(dragSrc, card);
+    }
+  });
+}
+
+function saveOrder() {
+  const cards = [...document.querySelectorAll('.manhwa-card')];
+  const order = cards.map(c => c.dataset.name);
+  localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+  // Update allManhwas order
+  const newOrder = [];
+  for (const name of order) {
+    const m = allManhwas.find(x => x.name === name);
+    if (m) newOrder.push(m);
+  }
+  allManhwas = newOrder;
+}
+
+// ═══════════════ NAVIGATION ═══════════════
+function showHome() {
+  document.getElementById('homePage').style.display = 'block';
+  document.getElementById('detailPage').style.display = 'none';
+  document.getElementById('readerPage').style.display = 'none';
+}
+
+async function showDetail(manhwaName) {
+  currentManhwa = manhwaName;
+  const m = allManhwas.find(x => x.name === manhwaName);
+  if (!m) return;
+
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('detailPage').style.display = 'block';
+  document.getElementById('readerPage').style.display = 'none';
+
+  document.getElementById('detailTitle').textContent = m.title;
+  document.getElementById('detailSynopsis').textContent = m.synopsis || 'Aucun synopsis disponible.';
+
+  // Badges
+  const badges = document.getElementById('detailBadges');
+  badges.innerHTML = '';
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'badge';
+  statusBadge.textContent = m.status || 'En cours';
+  badges.appendChild(statusBadge);
+  if (m.seasons) {
+    const s = document.createElement('span');
+    s.className = 'badge';
+    s.textContent = `${m.seasons} saison${m.seasons>1?'s':''}`;
+    badges.appendChild(s);
+  }
+
+  // Cover
+  let coverUrl = m.cover || await findCover(manhwaName);
+  const coverImg = document.getElementById('detailCover');
+  const coverPl = document.getElementById('detailCoverPlaceholder');
+  const detailBg = document.getElementById('detailBg');
+
+  if (coverUrl) {
+    coverImg.src = coverUrl;
+    coverImg.style.display = 'block';
+    coverPl.style.display = 'none';
+    detailBg.style.backgroundImage = `url('${coverUrl}')`;
+  } else {
+    coverImg.style.display = 'none';
+    coverPl.style.display = 'flex';
+    detailBg.style.backgroundImage = '';
+  }
+
+  // Chapters
+  const chaptersList = document.getElementById('chaptersList');
+  const loading = document.getElementById('chaptersLoading');
+  chaptersList.innerHTML = '';
+  loading.style.display = 'flex';
+  document.getElementById('chapterCountLabel').textContent = 'Chapitres — Détection…';
+
+  const discovered = await discoverChapters(manhwaName);
+  currentChapters = discovered;
+  loading.style.display = 'none';
+  document.getElementById('chapterCountLabel').textContent = `${discovered.length} Chapitre${discovered.length>1?'s':''}`;
+
+  if (discovered.length === 0) {
+    chaptersList.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Aucun chapitre détecté.<br>Vérifiez la structure de dossiers.</p></div>';
+    return;
+  }
+
+  // Reverse to show latest first
+  const displayChapters = [...discovered].reverse();
+
+  for (const ch of displayChapters) {
+    const chInfo = (m.chapters && m.chapters[ch]) || {};
+    const item = document.createElement('div');
+    item.className = 'chapter-item';
+    item.innerHTML = `
+      <div class="chapter-num">Ch. ${ch}</div>
+      <div class="chapter-title">${chInfo.title || `Chapitre ${ch}`}</div>
+      <div class="chapter-arrow">›</div>
+    `;
+    item.addEventListener('click', () => openReader(manhwaName, ch));
+    chaptersList.appendChild(item);
+  }
+}
+
+// ═══════════════ READER ═══════════════
+async function openReader(manhwaName, chapter) {
+  currentManhwa = manhwaName;
+  const m = allManhwas.find(x => x.name === manhwaName);
+  currentChapterIndex = currentChapters.indexOf(chapter);
+
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('detailPage').style.display = 'none';
+  document.getElementById('readerPage').style.display = 'block';
+
+  // Title
+  document.getElementById('readerTitle').textContent =
+    `${m ? m.title : manhwaName} — Chapitre ${chapter}`;
+
+  // Fill select
+  const sel = document.getElementById('chapterSelect');
+  sel.innerHTML = '';
+  for (const ch of currentChapters) {
+    const opt = document.createElement('option');
+    opt.value = ch;
+    opt.textContent = `Chapitre ${ch}`;
+    if (ch === chapter) opt.selected = true;
+    sel.appendChild(opt);
+  }
+
+  // Nav buttons
+  document.getElementById('prevChapterBtn').disabled = currentChapterIndex <= 0;
+  document.getElementById('nextChapterBtn').disabled = currentChapterIndex >= currentChapters.length - 1;
+
+  // Load images
+  const content = document.getElementById('readerContent');
+  content.innerHTML = `<div class="reader-loading"><div class="spinner"></div><span>Chargement des images…</span></div>`;
+  window.scrollTo(0, 0);
+
+  const images = await discoverImages(manhwaName, chapter);
+
+  content.innerHTML = '';
+  if (images.length === 0) {
+    content.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>Aucune image trouvée dans ce chapitre.</p></div>';
+    return;
+  }
+
+  for (let i = 0; i < images.length; i++) {
+    const img = document.createElement('img');
+    img.className = 'reader-page';
+    img.src = images[i];
+    img.alt = `Page ${i+1}`;
+    img.loading = 'lazy';
+    content.appendChild(img);
+  }
+
+  // Progress bar on scroll
+  setupProgressBar();
+}
+
+function setupProgressBar() {
+  const bar = document.getElementById('progressBar');
+  const onScroll = () => {
+    const h = document.documentElement;
+    const pct = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    bar.style.transform = `scaleX(${pct})`;
+  };
+  window.removeEventListener('scroll', window._progressHandler);
+  window._progressHandler = onScroll;
+  window.addEventListener('scroll', onScroll);
+}
+
+function changeChapterFromSelect() {
+  const ch = parseInt(document.getElementById('chapterSelect').value);
+  openReader(currentManhwa, ch);
+}
+
+function navigateChapter(dir) {
+  const newIdx = currentChapterIndex + dir;
+  if (newIdx < 0 || newIdx >= currentChapters.length) return;
+  openReader(currentManhwa, currentChapters[newIdx]);
+}
+
+function toggleZoom() {
+  zoomEnabled = !zoomEnabled;
+  const content = document.getElementById('readerContent');
+  const btn = document.getElementById('zoomBtn');
+  content.classList.toggle('zoom-enabled', zoomEnabled);
+  btn.classList.toggle('active', zoomEnabled);
+
+  if (zoomEnabled) {
+    content.style.cursor = 'zoom-in';
+    content.addEventListener('click', handleZoomClick);
+  } else {
+    content.style.cursor = '';
+    content.style.transform = '';
+    content.style.transformOrigin = '';
+    content.removeEventListener('click', handleZoomClick);
+    isZoomedIn = false;
+  }
+}
+
+let isZoomedIn = false;
+function handleZoomClick(e) {
+  const content = document.getElementById('readerContent');
+  if (!isZoomedIn) {
+    const rect = content.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+    const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+    content.style.transformOrigin = `${x}% ${y}%`;
+    content.style.transform = 'scale(1.8)';
+    content.style.cursor = 'zoom-out';
+    isZoomedIn = true;
+  } else {
+    content.style.transform = '';
+    content.style.cursor = 'zoom-in';
+    isZoomedIn = false;
+  }
+}
+
+// ═══════════════ KEYBOARD NAV ═══════════════
+document.addEventListener('keydown', e => {
+  if (document.getElementById('readerPage').style.display !== 'none') {
+    if (e.key === 'ArrowLeft') navigateChapter(-1);
+    if (e.key === 'ArrowRight') navigateChapter(1);
+    if (e.key === 'Escape') showDetail(currentManhwa);
+  }
+});
+</script>
+</body>
+</html>

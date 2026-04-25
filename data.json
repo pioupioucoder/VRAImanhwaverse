@@ -1,0 +1,18 @@
+{
+  "manhwas": [
+    {
+      "name": "Passion",
+      "title": "Passion",
+      "synopsis": "Une histoire captivante de romance et de dépassement de soi dans un monde moderne où les émotions prennent vie à travers des illustrations sublimes.",
+      "status": "en cours",
+      "seasons": 2,
+      "cover": null,
+      "chapters": {
+        "1": { "title": "Les débuts" },
+        "10": { "title": "Le tournant" },
+        "25": { "title": "La révélation", "synopsis": "Tout bascule dans ce chapitre intense." },
+        "49": { "title": "Sans retour" }
+      }
+    }
+  ]
+}

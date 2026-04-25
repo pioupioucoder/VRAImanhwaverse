@@ -1,0 +1,48 @@
+{
+  "manhwas": [
+    {
+      "name": "Passion",
+      "title": "Passion",
+      "synopsis": "Une histoire captivante de romance et de dépassement de soi dans un monde moderne où les émotions prennent vie à travers des illustrations sublimes.",
+      "status": "en cours",
+      "seasons": 2,
+      "cover": null,
+      "chapters": {
+        "1": { "title": "Les débuts" },
+        "10": { "title": "Le tournant" },
+        "25": { "title": "La révélation", "synopsis": "Tout bascule dans ce chapitre intense." },
+        "49": { "title": "Sans retour" }
+      }
+    },
+    {
+      "name": "ShadowBlade",
+      "title": "Shadow Blade",
+      "synopsis": "Dans un royaume plongé dans l'obscurité, un jeune guerrier portant une lame maudite doit affronter ses propres démons pour sauver ce qui lui reste.",
+      "status": "en cours",
+      "seasons": 1,
+      "cover": null,
+      "chapters": {
+        "1": { "title": "L'éveil" },
+        "5": { "title": "La malédiction" }
+      }
+    },
+    {
+      "name": "CelestialRealm",
+      "title": "Celestial Realm",
+      "synopsis": "Entre ciel et terre, deux âmes liées par le destin traversent des épreuves immortelles. Une épopée fantastique aux illustrations époustouflantes.",
+      "status": "terminé",
+      "seasons": 3,
+      "cover": null,
+      "chapters": {}
+    },
+    {
+      "name": "NeonCity",
+      "title": "Neon City",
+      "synopsis": "2147. Dans une métropole cyberpunk, une détective aux capacités augmentées traque un tueur fantôme qui efface toute trace numérique de ses victimes.",
+      "status": "pause",
+      "seasons": 1,
+      "cover": null,
+      "chapters": {}
+    }
+  ]
+}
